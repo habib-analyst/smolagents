@@ -1298,12 +1298,21 @@ class ToolCallingAgent(MultiStepAgent):
 
                 chat_message_stream_deltas: list[ChatMessageStreamDelta] = []
                 with Live("", console=self.logger.console, vertical_overflow="visible") as live:
+                    # Throttle Markdown re-rendering: re-parsing the full
+                    # message on every delta is O(n^2) (see issue #3017).
+                    last_render = 0.0
                     for event in output_stream:
                         chat_message_stream_deltas.append(event)
-                        live.update(
-                            Markdown(agglomerate_stream_deltas(chat_message_stream_deltas).render_as_markdown())
-                        )
+                        now = time.monotonic()
+                        if now - last_render >= 0.1:
+                            live.update(
+                                Markdown(agglomerate_stream_deltas(chat_message_stream_deltas).render_as_markdown())
+                            )
+                            last_render = now
                         yield event
+                    live.update(
+                        Markdown(agglomerate_stream_deltas(chat_message_stream_deltas).render_as_markdown())
+                    )
                 chat_message = agglomerate_stream_deltas(chat_message_stream_deltas)
             else:
                 chat_message: ChatMessage = self.model.generate(
@@ -1664,12 +1673,21 @@ class CodeAgent(MultiStepAgent):
                 )
                 chat_message_stream_deltas: list[ChatMessageStreamDelta] = []
                 with Live("", console=self.logger.console, vertical_overflow="visible") as live:
+                    # Throttle Markdown re-rendering: re-parsing the full
+                    # message on every delta is O(n^2) (see issue #3017).
+                    last_render = 0.0
                     for event in output_stream:
                         chat_message_stream_deltas.append(event)
-                        live.update(
-                            Markdown(agglomerate_stream_deltas(chat_message_stream_deltas).render_as_markdown())
-                        )
+                        now = time.monotonic()
+                        if now - last_render >= 0.1:
+                            live.update(
+                                Markdown(agglomerate_stream_deltas(chat_message_stream_deltas).render_as_markdown())
+                            )
+                            last_render = now
                         yield event
+                    live.update(
+                        Markdown(agglomerate_stream_deltas(chat_message_stream_deltas).render_as_markdown())
+                    )
                 chat_message = agglomerate_stream_deltas(chat_message_stream_deltas)
                 memory_step.model_output_message = chat_message
                 output_text = chat_message.content
