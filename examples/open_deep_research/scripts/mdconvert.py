@@ -311,7 +311,8 @@ class YouTubeConverter(DocumentConverter):
             video_id = str(params["v"][0])
             try:
                 # Must be a single transcript.
-                transcript = YouTubeTranscriptApi.get_transcript(video_id)  # type: ignore
+                # v1.0+ API: get_transcript was removed, use instance fetch().
+                transcript = YouTubeTranscriptApi().fetch(video_id)
                 # transcript_text = " ".join([part["text"] for part in transcript])  # type: ignore
                 # Alternative formatting:
                 transcript_text = SRTFormatter().format_transcript(transcript)
