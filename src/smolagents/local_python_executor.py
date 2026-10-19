@@ -955,7 +955,9 @@ def evaluate_name(
         return ERRORS[name.id]
     close_matches = difflib.get_close_matches(name.id, list(state.keys()))
     if len(close_matches) > 0:
-        return state[close_matches[0]]
+        raise InterpreterError(
+            f"The variable `{name.id}` is not defined. Maybe you meant one of these: {close_matches}"
+        )
     raise InterpreterError(f"The variable `{name.id}` is not defined.")
 
 

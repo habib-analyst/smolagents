@@ -961,13 +961,15 @@ except ValueError as e:
         assert result is int
 
     def test_tuple_id(self):
+        # Undefined names must raise instead of silently resolving to a
+        # similarly-named variable (see issue #3014).
         code = """
 food_items = {"apple": 2, "banana": 3, "orange": 1, "pear": 1}
 unique_food_items = [item for item, count in food_item_counts.items() if count == 1]
 """
         state = {}
-        result, is_final_answer = evaluate_python_code(code, {}, state=state)
-        assert result == ["orange", "pear"]
+        with pytest.raises(InterpreterError, match="not defined"):
+            evaluate_python_code(code, {}, state=state)
 
     def test_nonsimple_augassign(self):
         code = """
@@ -1991,12 +1993,12 @@ class TestEvaluateSubscript:
             ("tup[:]", {"tup": (1, 2, 3)}, (1, 2, 3)),
             ("tup[::2]", {"tup": (1, 2, 3, 4)}, (1, 3)),
             ("tup[::-1]", {"tup": (1, 2, 3)}, (3, 2, 1)),
-            ("st[1]", {"str": "abc"}, "b"),
-            ("st[-1]", {"str": "abc"}, "c"),
-            ("st[1:3]", {"str": "abcd"}, "bc"),
-            ("st[:]", {"str": "abc"}, "abc"),
-            ("st[::2]", {"str": "abcd"}, "ac"),
-            ("st[::-1]", {"str": "abc"}, "cba"),
+            ("st[1]", {"st": "abc"}, "b"),
+            ("st[-1]", {"st": "abc"}, "c"),
+            ("st[1:3]", {"st": "abcd"}, "bc"),
+            ("st[:]", {"st": "abc"}, "abc"),
+            ("st[::2]", {"st": "abcd"}, "ac"),
+            ("st[::-1]", {"st": "abc"}, "cba"),
             ("arr[1]", {"arr": np.array([1, 2, 3])}, 2),
             ("arr[1:3]", {"arr": np.array([1, 2, 3, 4])}, np.array([2, 3])),
             ("arr[:]", {"arr": np.array([1, 2, 3])}, np.array([1, 2, 3])),
